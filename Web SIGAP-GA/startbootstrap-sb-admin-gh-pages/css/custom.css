@@ -1,0 +1,240 @@
+/* 🔵 RADAR HALUS (NGGAK TERANG) */
+body::before{
+content:'';
+position:fixed;
+top:50%;
+left:50%;
+width:500px;
+height:500px;
+transform:translate(-50%,-50%);
+background:radial-gradient(circle, rgba(0,234,255,0.04), transparent 70%);
+pointer-events:none;
+animation:pulseBg 6s infinite;
+}
+
+/* ✨ GRID BINTANG LEBIH HALUS */
+body::after{
+content:'';
+position:fixed;
+width:100%;
+height:100%;
+background-image:radial-gradient(#00eaff 0.5px, transparent 0.5px);
+background-size:60px 60px;
+opacity:0.05;
+animation:moveStars 80s linear infinite;
+pointer-events:none;
+}
+
+
+/* HEADER */
+.header {
+    margin: 20px;
+    padding: 15px;
+    border: 2px solid #00ffff;
+    border-radius: 10px;
+    color: #00ffff;
+    text-shadow: 0 0 10px #00ffff;
+}
+
+/* GRID */
+.grid {
+    display: grid;
+    grid-template-columns: 2fr 2fr 1fr;
+    gap: 20px;
+    padding: 20px;
+}
+
+/* PANEL */
+.panel {
+    border: 2px solid #00ffff;
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 0 15px #00ffff;
+    background: rgba(0,0,0,0.6);
+}
+
+.title {
+    margin-bottom: 10px;
+    color: #00ffff;
+}
+
+/* STATUS */
+.status-box {
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 10px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.aman { background: #00c853; }
+.waspada { background: #ff9800; }
+.siaga { background: #ff1744; }
+
+.counter {
+    font-size: 18px;
+    margin: 10px 0;
+}
+
+/* HEATMAP */
+.heatmap {
+    height: 100px;
+    background: linear-gradient(to top,
+        blue, cyan, lime, yellow, orange, red);
+    border-radius: 10px;
+    margin-top: 10px;
+    opacity: 0.7;
+}
+
+/* WAVE */
+.wave {
+    height: 60px;
+    background: repeating-linear-gradient(
+        90deg,
+        #00ffff,
+        #00ffff 2px,
+        transparent 2px,
+        transparent 6px
+    );
+    animation: move 1s linear infinite;
+    margin-top: 10px;
+}
+
+@keyframes move {
+    from { background-position: 0; }
+    to { background-position: 100px; }
+}
+
+/* TABLE */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    color: white;
+}
+
+th, td {
+    border: 1px solid #00ffff;
+    padding: 10px;
+    text-align: center;
+}
+
+.mapBox{
+width:100%;
+aspect-ratio:16/9;
+border:2px solid #00eaff;
+position:relative;
+overflow:hidden;
+}
+
+
+.sensor{
+    fill: lime;
+    transition: 0.3s;
+}
+
+/* gambar */
+.mapImage{
+    position:absolute;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    top:0;
+    left:0;
+}
+
+/* svg overlay */
+.mapOverlay{
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+}
+
+.mapInfo{
+position:absolute;
+top:20px;
+right:20px;
+width:250px;
+padding:15px;
+border:2px solid #00eaff;
+background:#000c;
+color:#00eaff;
+font-size:14px;
+line-height:1.6;
+box-shadow:0 0 10px #00eaff55;
+}
+
+/* SENSOR STYLE */
+.sensor{
+    fill:lime;
+    cursor:pointer;
+}
+
+/* POPUP */
+.popup{
+    position:absolute;
+    background:#000d;
+    color:white;
+    padding:10px;
+    border:1px solid #00eaff;
+    display:none;
+    z-index:20;
+    font-size:12px;
+    border-radius:5px;
+}
+
+
+/* MOBILE */
+.phone {
+    margin: 40px auto;
+    width: 250px;
+    border: 3px solid #00ffff;
+    border-radius: 20px;
+    padding: 15px;
+    box-shadow: 0 0 20px #00ffff;
+}
+
+/* ===== APP FEEL UPGRADE ===== */
+
+/* glow halus panel */
+.panel{
+backdrop-filter: blur(4px);
+border-radius:12px;
+}
+
+/* header lebih hidup */
+.header span.live{
+color:lime;
+font-size:12px;
+margin-left:10px;
+animation:blink 1s infinite;
+}
+
+/* sensor bahaya kedip */
+@keyframes dangerBlink{
+0%,100%{opacity:1;}
+50%{opacity:0.3;}
+}
+
+/* popup lebih smooth */
+.popup{
+animation:fadeIn 0.3s ease;
+}
+@keyframes fadeIn{
+from{opacity:0; transform:scale(0.9);}
+to{opacity:1; transform:scale(1);}
+}
+
+/* map info lebih clean */
+.mapInfo{
+border-radius:10px;
+backdrop-filter:blur(6px);
+}
+
+/* tombol menu aktif */
+.menu button.active{
+background:#00eaff;
+color:black;
+box-shadow:0 0 15px #00eaff;
+}

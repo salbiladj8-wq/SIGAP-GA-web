@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIGAP-GA FINAL - Enhanced Volcanic Monitoring (PVMBG Standard)</title>
+<style>
+/* [SEMUA CSS SAMA PERSIS - TIDAK BERUBAH] */
+* { box-sizing: border-box; }
+body{
+margin:0;
+background:#05070d;
+font-family:'Segoe UI', Arial, sans-serif;
+color:white;
+background-image:
+linear-gradient(rgba(0,234,255,0.08) 1px, transparent 1px),
+linear-gradient(90deg, rgba(0,234,255,0.08) 1px, transparent 1px);
+background-size:40px 40px;
+animation: gridMove 20s linear infinite;
+overflow-x: hidden;
+}
+@keyframes gridMove{
+0%{background-position:0 0,0 0;}
+100%{background-position:40px 40px,40px 40px;}
+}
+.header{
+padding:20px;
+border-bottom:3px solid #00eaff;
+color:#00eaff;
+text-align:center;
+font-size:24px;
+font-weight:700;
+background:linear-gradient(90deg,#02040a,#0a1a2f,#02040a);
+box-shadow:0 0 20px #00eaff44;
+position:relative;
+overflow:hidden;
+}
+.header::after{
+content:'';
+position:absolute;
+bottom:0;
+left:-100%;
+width:100%;
+height:3px;
+background:linear-gradient(90deg, transparent, #00eaff, transparent);
+animation:scanHeader 4s linear infinite;
+}
+@keyframes scanHeader{
+0%{left:-100%;}
+100%{left:100%;}
+}
+#statusLamp{
+position:absolute;
+top:20px;
+right:25px;
+width:18px;
+height:18px;
+border-radius:50%;
+box-shadow:0 0 12px currentColor, 0 0 25px currentColor;
+animation: lampPulse 2s infinite;
+}
+@keyframes lampPulse{
+0%,100%{opacity:1; transform:scale(1);}
+50%{opacity:0.7; transform:scale(1.1);}
+}
+
+#alertOverlay{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+pointer-events:none;
+background:radial-gradient(circle, transparent 60%, rgba(255,0,0,0.15));
+display:none;
+animation:blink 1.2s infinite;
+z-index:999;
+}
+@keyframes blink{
+0%,100%{opacity:0;}
+50%{opacity:1;}
+}
+
+.main{display:flex; min-height:calc(100vh - 80px);}
+.menu{
+width:220px;
+border-right:3px solid #00eaff;
+padding:20px;
+background:rgba(0,10,30,0.3);
+overflow-y:auto;
+}
+.menu button{
+width:100%;
+margin-bottom:12px;
+background:rgba(0,0,0,0.7);
+color:#00eaff;
+border:2px solid #00eaff;
+padding:12px;
+text-align:left;
+border-radius:8px;
+transition:0.3s;
+font-weight:500;
+cursor:pointer;
+}
+.menu button:hover{
+background:#00eaff;
+color:#000;
+box-shadow:0 0 15px #00eaff;
+transform:translateX(5px);
+}
+.menu button:active{transform:scale(0.98);}
+.menu button.active{
+background:#00eaff;
+color:#000;
+box-shadow:0 0 15px #00eaff;
+}
+
+.content{flex:1;padding:25px; overflow-y:auto;}
+
+.grid{
+display:grid;
+grid-template-columns:1fr 1fr 320px;
+gap:20px;
+}
+
+.panel{
+border:3px solid #00eaff;
+background:rgba(0,0,0,0.8);
+padding:20px;
+box-shadow:0 0 20px #00eaff33, inset 0 0 15px #00eaff22;
+transition:0.4s;
+animation: panelPulse 4s infinite;
+position:relative;
+border-radius:12px;
+}
+@keyframes panelPulse{
+0%{box-shadow:0 0 15px #00eaff33, inset 0 0 10px #00eaff22;}
+50%{box-shadow:0 0 30px #00eaff66, inset 0 0 20px #00eaff44;}
+100%{box-shadow:0 0 15px #00eaff33, inset 0 0 10px #00eaff22;}
+}
+.panel:hover{box-shadow:0 0 40px #00eaff88; transform:translateY(-5px);}
+
+.title{
+color:#ffae00;
+font-size:18px;
+font-weight:700;
+margin-bottom:15px;
+text-shadow:0 0 10px #ffae00;
+}
+
+.chartContainer{
+position:relative;
+height:200px;
+background:rgba(0,0,0,0.5);
+border:1px solid #00eaff44;
+border-radius:8px;
+overflow:hidden;
+}
+
+canvas{width:100%;height:100%;}
+
+.graphRow{display:flex;align-items:center;}
+.scale{
+width:60px;
+font-size:11px;
+color:#00eaff;
+display:flex;
+flex-direction:column;
+justify-content:space-evenly;
+height:200px;
+text-align:right;
+margin-right:10px;
+font-weight:500;
+}
+.axisLabel{
+font-size:12px;
+color:#00eaff;
+font-weight:600;
+margin-left:10px;
+writing-mode:vertical-rl;
+text-orientation:mixed;
+}
+
+.label{
+font-size:11px;
+color:#00eaff;
+display:flex;
+justify-content:center;
+margin-top:8px;
+font-weight:500;
+}
+.box{padding:15px;margin-top:15px;border-radius:8px;}
+.inlineBox{display:flex;justify-content:space-between;align-items:center;}
+.inlineBox input{
+width:80px;text-align:center;
+background:rgba(0,0,0,0.8);
+color:white;
+border:2px solid #00eaff;
+padding:8px;
+border-radius:6px;
+font-weight:500;
+}
+.inlineBox select{
+background:rgba(0,0,0,0.8);
+color:#00eaff;
+border:2px solid #00eaff;
+padding:8px;
+border-radius:6px;
+font-weight:500;
+}
+
+.eruption{border:2px solid #ff6b35;color:#ff6b35;}
+.rockfall{border:2px solid #f7b731;color:#f7b731;}
+.rsam{border:2px solid #e63946;color:#e63946;}
+
+.analysisBox{
+border:3px solid #00eaff;
+padding:30px;
+line-height:1.8;
+background:rgba(0,0,0,0.9);
+border-radius:15px;
+box-shadow:0 0 30px #00eaff44;
+}
+.mapBox{
+width:100%;height:500px;
+border:3px solid #00eaff;
+object-fit:cover;
+position:relative;
+border-radius:15px;
+overflow:hidden;
+box-shadow:0 0 30px #00eaff44;
+}
+.tooltip{
+position:fixed;
+background:rgba(0,0,0,0.95);
+color:white;
+padding:10px 12px;
+border-radius:8px;
+font-size:13px;
+pointer-events:none;
+display:none;
+z-index:1000;
+border:1px solid #00eaff;
+box-shadow:0 0 15px #00eaff44;
+backdrop-filter:blur(10px);
+max-width:250px;
+}
+.jamRow{
+display:flex;justify-content:center;
+font-size:13px;color:#00eaff;
+gap:8px;margin-top:10px;
+font-weight:600;
+font-family:monospace;
+}
+.gridLines{
+stroke:#00eaff22;
+stroke-width:1;
+}
+.pvmbg-badge {
+position:absolute;
+bottom:10px;
+right:10px;
+font-size:10px;
+color:#00eaff;
+opacity:0.7;
+}
+
+.chartContainer {
+    position: relative;
+    height: 200px !important;
+    background: rgba(0,0,0,0.5);
+    border: 1px solid #00eaff44;
+    border-radius: 8px;
+    overflow: hidden;
+    display: block !important;
+}
+
+canvas {
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+}
+.status-display {
+    font-size: 24px;
+    font-weight: 700;
+    text-align: center;
+    margin: 15px 0;
+    padding: 15px;
+    border-radius: 10px;
+    text-shadow: 0 0 10px currentColor;
+}
+.status-normal { background: rgba(0,255,136,0.2); color: #00ff88; border: 2px solid #00ff88; }
+.status-waspada { background: rgba(247,183,49,0.3); color: #f7b731; border: 2px solid #f7b731; animation: pulseWarning 1s infinite; }
+.status-siaga { background: rgba(230,57,70,0.4); color: #e63946; border: 2px solid #e63946; animation: pulseWarning 0.8s infinite; }
+@keyframes pulseWarning {
+    0%, 100% { box-shadow: 0 0 10px currentColor; }
+    50% { box-shadow: 0 0 25px currentColor, 0 0 35px currentColor; }
+}
+.rsam-low { border-color: #00ff88 !important; color: #00ff88 !important; }
+.rsam-medium { border-color: #f7b731 !important; color: #f7b731 !important; }
+.rsam-high { border-color: #e63946 !important; color: #e63946 !important; animation: pulseWarning 1.5s infinite; }
+
+/* Region Labels */
+.region-label {
+    position: absolute;
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    border: 1px solid #00eaff;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .grid { grid-template-columns: 1fr; }
+    .panel[style*="grid-column"] { grid-column: span 1 !important; }
+}
+@media (max-width: 768px) {
+    .main { flex-direction: column; }
+    .menu { width: 100%; border-right: none; border-bottom: 3px solid #00eaff; }
+}
+</style>
+</head>
+<body>
+<!-- [HTML STRUCTURE SAMA PERSIS - TIDAK BERUBAH] -->
+<div id="alertOverlay"></div>
+<div class="header" id="headerText">
+<div id="statusLamp"></div>
+<span>SIGAP-GA v2.0 - PVMBG Real-time Monitoring</span>
+</div>
+
+<div class="main">
+<div class="menu">
+<button onclick="showPage('dash')" id="btn-dash">📊 Dashboard</button>
+<button onclick="showPage('analysis')" id="btn-analysis">📈 Analysis</button>
+<button onclick="showPage('mapPage')" id="btn-map">🗺️ Real-time Map</button>
+<button onclick="showPage('dataPage')" id="btn-data">📡 Live Data Feed</button>
+<button onclick="showPage('contactPage')" id="btn-contact">📞 Emergency Contacts</button>
+</div>
+
+<div class="content">
+<div id="dash">
+<div class="grid">
+<!-- SEISMIC PANEL -->
+<div class="panel">
+<div class="title">🌋 SEISMIC STATION<br><span style="font-size:14px;font-weight:400;">Ground Vibration</span></div>
+<div style="display:flex;align-items:start;">
+<div class="scale">
+<span>50</span><span>40</span><span>30</span><span>20</span><span>10</span><span>0</span>
+<div style="margin-top:10px; font-size:10px; color:#00eaff; font-weight:600; writing-mode:vertical-rl; text-orientation:mixed;">
+(Frequency (Hz))
+</div>
+</div>
+<div class="chartContainer">
+<canvas id="wave1"></canvas>
+</div>
+<div style="margin-left:70px; margin-top:5px;">
+<span class="axisLabel" style="writing-mode:horizontal-tb; font-size:11px;">(Time (minutes))</span>
+</div>
+</div>
+<div class="jamRow" id="time1"></div>
+</div>
+
+<!-- INFRASOUND PANEL -->
+<div class="panel">
+<div class="title">🔊 INFRASOUND ARRAY<br><span style="font-size:14px;font-weight:400;">Air Pressure Waves</span></div>
+<div style="display:flex;align-items:start;">
+<div class="scale">
+<span>50</span><span>40</span><span>30</span><span>20</span><span>10</span><span>0</span>
+<div style="margin-top:10px; font-size:10px; color:#00eaff; font-weight:600; writing-mode:vertical-rl; text-orientation:mixed;">
+(Amplitude)
+</div>
+</div>
+<div class="chartContainer">
+<canvas id="wave2"></canvas>
+</div>
+<div style="margin-left:70px; margin-top:5px;">
+<span class="axisLabel" style="writing-mode:horizontal-tb; font-size:11px;">(Time (minutes))</span>
+</div>
+</div>
+<div class="jamRow" id="time2"></div>
+</div>
+
+<!-- ACTIVITY SUMMARY -->
+<div class="panel">
+<div class="title">📊 ACTIVITY SUMMARY</div>
+<div class="box eruption inlineBox">
+<span>🔥 TODAY'S ERUPTIONS:</span><input id="eruptionInput" value="12" type="number" min="0" max="100" onchange="updateAllGraphs()">
+</div>
+<div class="box rockfall inlineBox">
+<span>🪨 ROCKFALL EVENTS:</span><input id="rockfallInput" value="28" type="number" min="0" max="200" onchange="updateAllGraphs()">
+</div>
+<div class="box rsam inlineBox" id="rsamBox">
+<span>📈 CURRENT RSAM:</span>
+<select id="rsamSelect" onchange="updateAllGraphs()">
+<option value="low">LOW (0-200)</option>
+<option value="medium">MEDIUM (200-500)</option>
+<option value="high">HIGH (>500)</option>
+</select>
+</div>
+<div class="status-display" id="autoStatus">
+    <div>⚠️ STATUS LEVEL: <span id="statusLevel">NORMAL</span></div>
+    <div style="font-size:14px;opacity:0.8;margin-top:5px;" id="statusRange"></div>
+</div>
+<div class="jamRow" id="time3"></div>
+</div>
+
+<!-- THERMAL PANEL -->
+<div class="panel" style="grid-column: span 2;">
+<div class="title">🌡️ THERMAL ACTIVITY<br><span style="font-size:14px;font-weight:400;">Kawah Surface Temperature</span></div>
+<div style="display:flex;align-items:start;">
+<div class="scale">
+<span>600</span><span>500</span><span>400</span><span>300</span><span>200</span>
+<div style="margin-top:10px; font-size:10px; color:#00eaff; font-weight:600; writing-mode:vertical-rl; text-orientation:mixed;">
+(°C)
+</div>
+</div>
+<div class="chartContainer">
+<canvas id="thermal"></canvas>
+</div>
+<div style="margin-left:70px; margin-top:5px;">
+<span class="axisLabel" style="writing-mode:horizontal-tb; font-size:11px;">(Time (minutes))</span>
+</div>
+</div>
+<div class="jamRow" id="time4"></div>
+<div class="pvmbg-badge">PVMBG Standard Colors</div>
+</div>
+</div>
+</div>
+
+<!-- [ANALYSIS PAGE - DIPERBAIKI OTOMATIS BERDASARKAN STATUS] -->
+<div id="analysis" class="analysisBox" style="display:none;">
+<h2 style="color:#ffae00;margin-bottom:20px;">🔬 VULKANIC ANALYSIS REPORT (PVMBG Semeru - Real-time)</h2>
+<div id="analysisContent">
+<p><b>📊 PVMBG Official Analysis (Updated: <span id="analysisUpdate"></span>):</b></p>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+<div id="analysisLeft">
+<b>Seismic Pattern:</b> <span id="analysisSeismic">Stable low-frequency</span><br>
+<b>Infrasound:</b> <span id="analysisInfrasound">Normal pressure waves</span><br>
+<b>Thermal:</b> <span id="analysisThermal">Kawah 280-320°C (stable)</span>
+</div>
+<div id="analysisRight">
+<b>RSAM Trend:</b> <span id="analysisRSAM">LOW</span><br>
+<b>Status:</b> <span id="analysisStatus">LEVEL I (NORMAL)</span><br>
+<b>Risk:</b> <span id="analysisRisk">Monitoring only</span>
+</div>
+</div>
+<p style="margin-top:25px; padding:15px; background:rgba(0,234,255,0.1); border-left:4px solid #00eaff; font-size:14px;">
+<b>📋 PVMBG Recommendation:</b> <span id="analysisRec">Rutinitas pengamatan normal</span>
+</p>
+</div>
+</div>
+
+<div id="dataPage" style="display:none;" class="analysisBox">
+<h2 style="color:#00eaff;">📡 LIVE DATA FEED (PVMBG API Simulation)</h2>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;margin-top:20px;">
+<div class="panel" style="height:200px;">
+<div class="title">🌋 Semeru Live Status</div>
+<div id="liveStatus" style="font-family:monospace;font-size:14px;line-height:1.6;">
+Last Update
+: <span id="liveUpdate"></span><br>
+Seismic: <span id="liveSeismic">NORMAL</span><br>
+Thermal: <span id="liveThermal">298°C</span><br>
+RSAM: <span id="liveRSAM">145</span><br>
+Status: <span id="liveStatusLevel">NORMAL</span>
+</div>
+</div>
+</div>
+</div>
+
+<div id="mapPage" style="display:none;">
+<div class="mapBox" id="mapBox">
+<img id="mapImage" src="../assets/map.jpeg" 
+style="width:100%; height:100%; object-fit:cover; display:block; filter: brightness(0.3) contrast(1.2) saturate(1.5);">
+style="width:100%; height:100%; object-fit:cover; display:block; filter: brightness(0.3) contrast(1.2) saturate(1.5);">
+
+<!-- REGION LABELS - DITAMBAHKAN -->
+<div class="region-label" id="labelRanuPani" style="top:65%; left:35%; display:none;">🏔️ Ranu Pani</div>
+<div class="region-label" id="labelLumajang" style="top:75%; left:25%; display:none;">🌋 Lumajang</div>
+<div class="region-label" id="labelMalang" style="top:45%; right:25%; display:none;">🏞️ Malang</div>
+<div class="region-label" id="labelPronojiwo" style="top:68%; left:15%; display:none;">🚶 Pronojiwo</div>
+
+<svg viewBox="0 0 1200 800" preserveAspectRatio="none"
+style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events: none;">
+<!-- Kawah Utama Semeru -->
+<circle id="kawah" cx="600" cy="300" r="12" fill="white" stroke="#ff6b35" stroke-width="4" filter="url(#glow-red)"/>
+
+<!-- Zona Bahaya (8km radius) - HANYA TAMPIL SAAT WASPADA/SIAGA -->
+<circle id="zona1" cx="600" cy="300" r="100" fill="#e63946" opacity="0.4" stroke="#e63946" stroke-width="3" style="display:none;"/>
+<text id="textZona1" x="600" y="290" font-size="14" fill="white" text-anchor="middle" font-weight="bold" style="display:none;">ZONA BAHAYA</text>
+
+<!-- Zona Waspada (15km radius) - HANYA TAMPIL SAAT SIAGA -->
+<circle id="zona2" cx="600" cy="300" r="180" fill="#f7b731" opacity="0.25" stroke="#f7b731" stroke-width="3" stroke-dasharray="5,5" style="display:none;"/>
+<text id="textZona2" x="600" y="280" font-size="12" fill="#000" text-anchor="middle" font-weight="600" style="display:none;">ZONA WASPADA</text>
+
+<!-- Radar Scanning -->
+<circle cx="600" cy="300" r="250" fill="none" stroke="#00eaff" stroke-width="3" stroke-dasharray="10,10" opacity="0.8">
+<animate attributeName="stroke-dashoffset" values="0;20" dur="3s" repeatCount="indefinite"/>
+</circle>
+<line x1="600" y1="300" x2="800" y2="300" stroke="#00eaff" stroke-width="4" stroke-linecap="round">
+<animateTransform attributeName="transform" type="rotate" from="0 600 300" to="360 600 300" dur="3s" repeatCount="indefinite"/>
+</line>
+
+<!-- Sensor Stations -->
+<g class="sensor" transform="translate(500,250)">
+<circle r="12" fill="#00d4ff" stroke="white" stroke-width="2" filter="url(#glow-blue)"/>
+<text x="0" y="-7" font-size="12" fill="white" text-anchor="middle" font-weight="bold">SEISMIC</text>
+</g>
+
+<g class="sensor" transform="translate(420,380)">
+<circle r="12" fill="#00d4ff" stroke="white" stroke-width="2" filter="url(#glow-blue)"/>
+<text x="0" y="-7" font-size="12" fill="white" text-anchor="middle">INFRA</text>
+</g>
+
+<g class="sensor" transform="translate(720,450)">
+<circle r="10" fill="#ffae00" stroke="white" stroke-width="2"/>
+<text x="0" y="-6" font-size="10" fill="white" text-anchor="middle">THERMAL</text>
+</g>
+</svg>
+
+<defs>
+<filter id="glow-red">
+<feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+<feMerge> 
+<feMergeNode in="coloredBlur"/>
+<feMergeNode in="SourceGraphic"/>
+</feMerge>
+</filter>
+<filter id="glow-blue">
+<feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
+<feMerge> 
+<feMergeNode in="coloredBlur"/>
+<feMergeNode in="SourceGraphic"/>
+</feMerge>
+</filter>
+</defs>
+
+<div style="position:absolute; top:20px; right:20px; background:rgba(0,0,0,0.85); padding:20px; border-radius:15px; border:2px solid #00eaff; backdrop-filter:blur(15px);">
+📍 <b>🗻 GUNUNG SEMERU</b><br>
+<span style="color:#00eaff;font-family:monospace;">8°06'31"S 112°54'29"E • 3676m</span><br>
+<div style="margin-top:12px;">
+<span id="mapStatus" style="color:#00ff88; font-weight:700; font-size:16px;">LEVEL I - NORMAL</span><br>
+<span style="font-size:11px;opacity:0.8;">RSAM: <span id="mapRSAM">LOW</span> | Last: <span id="mapTime"></span></span>
+</div>
+<div style="font-size:10px;opacity:0.6;margin-top:10px;border-top:1px solid #00eaff44;padding-top:8px;">🇮🇩 PVMBG Official</div>
+</div>
+</div>
+</div>
+
+<div id="contactPage" style="display:none" class="analysisBox">
+<h2 style="color:#00eaff;">📞 EMERGENCY CONTACTS (PVMBG Official)</h2>
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:30px; margin-top:20px;">
+<div>
+<b>🌋 PVMBG Pusat Vulkanologi</b><br>
+📞 (021) 7272606<br>
+📱 WA: 0812-2333-4407<br><br>
+<b>🏔️ Pos Pengamatan Semeru</b><br>
+📍 Ranu Pani, Lumajang<br>
+📞 (0334) 51147
+</div>
+<div>
+<b>🚨 BPBD Jawa Timur</b><br>
+📞 (031) 8294020<br><br>
+<b>🚑 Darurat Nasional</b><br>
+📞 112 | 119 | 110<br><br>
+<b>💻 PVMBG Portal</b><br>
+🌐 <a href="https://pvmbg.geologi.esdm.go.id" target="_blank" style="color:#00eaff;">pvmbg.geologi.esdm.go.id</a>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div id="tooltip" class="tooltip"></div>
+
+<script>
+// ✅ GLOBAL STATE - DIPERBAIKI DENGAN PVMBG LEVEL SYSTEM
+const appState = {
+    level: 1, // 1=NORMAL, 2=WASPADA, 3=SIAGA
+    t: 0,
+    lastStatusLevel: 1,
+    beepPlaying: false,
+    siagaAlarmInterval: null, 
+    seismicData: [],
+    infrasoundData: [],
+    thermalData: [],
+    rsamValue: 0,
+    eruptionCount: 12,
+    rockfallCount: 28,
+    baseTime: Date.now()
+};
+
+// PVMBG OFFICIAL LEVEL DEFINITIONS
+const PVMBG_LEVELS = {
+    1: {
+        name: 'NORMAL',
+        color: '#00ff88',
+        range: 'Level I - Low Activity (0-35 events)',
+        seismic: 'Stable low-frequency tremors (5-15 Hz)',
+        infrasound: 'Normal pressure waves (10-20 amplitude)',
+        thermal: 'Kawah 280-320°C (stable)',
+        rsam: 'LOW',
+        risk: 'Monitoring only - No restrictions',
+        rec: 'Rutinitas pengamatan normal'
+    },
+    2: {
+        name: 'WASPADA',
+        color: '#f7b731',
+        range: 'Level II - Alert Zone (8km radius)',
+        seismic: 'High-frequency tremors (15-25 Hz)',
+        infrasound: 'Pressure waves 35-45 amplitude',
+        thermal: 'Kawah 420-580°C (↑32%)',
+        rsam: 'MEDIUM-HIGH',
+        risk: 'Rockfall & pyroclastic flow risk',
+        rec: 'Dilarang mendekati 8km dari puncak'
+    },
+    3: {
+        name: 'SIAGA',
+        color: '#e63946',
+        range: 'Level III - Danger Zone (15km radius)',
+        seismic: 'Continuous tremors (25-50 Hz)',
+        infrasound: 'Strong pressure waves 50+ amplitude',
+        thermal: 'Kawah 580-650°C (↑65%)',
+        rsam: 'HIGH-CRITICAL',
+        risk: 'Eruption imminent - Evacuation needed',
+        rec: 'Evakuasi wajib! Jangan dekati 15km'
+    }
+};
+
+// DOM Elements Cache - DITAMBAHKAN ELEMENTS BARU
+const elements = {
+    statusLamp: document.getElementById('statusLamp'),
+    headerText: document.getElementById('headerText'),
+    tooltip: document.getElementById('tooltip'),
+    statusLevel: document.getElementById('statusLevel'),
+    statusRange: document.getElementById('statusRange'),
+    autoStatus: document.getElementById('autoStatus'),
+    eruptionInput: document.getElementById('eruptionInput'),
+    rockfallInput: document.getElementById('rockfallInput'),
+    rsamSelect: document.getElementById('rsamSelect'),
+    rsamBox: document.getElementById('rsamBox'),
+    timeElements: {
+        time1: document.getElementById('time1'),
+        time2: document.getElementById('time2'),
+        time3: document.getElementById('time3'),
+        time4: document.getElementById('time4'),
+        mapTime: document.getElementById('mapTime'),
+        liveUpdate: document.getElementById('liveUpdate'),
+        analysisUpdate: document.getElementById('analysisUpdate')
+    },
+    liveElements: {
+        liveSeismic: document.getElementById('liveSeismic'),
+        liveThermal: document.getElementById('liveThermal'),
+        liveRSAM: document.getElementById('liveRSAM'),
+        liveStatusLevel: document.getElementById('liveStatusLevel')
+    },
+    analysisElements: {
+        analysisLeft: document.getElementById('analysisLeft'),
+        analysisRight: document.getElementById('analysisRight'),
+        analysisSeismic: document.getElementById('analysisSeismic'),
+        analysisInfrasound: document.getElementById('analysisInfrasound'),
+        analysisThermal: document.getElementById('analysisThermal'),
+        analysisRSAM: document.getElementById('analysisRSAM'),
+        analysisStatus: document.getElementById('analysisStatus'),
+        analysisRisk: document.getElementById('analysisRisk'),
+        analysisRec: document.getElementById('analysisRec')
+    },
+    mapElements: {
+        mapStatus: document.getElementById('mapStatus'),
+        mapRSAM: document.getElementById('mapRSAM'),
+        zona1: document.getElementById('zona1'),
+        textZona1: document.getElementById('textZona1'),
+        zona2: document.getElementById('textZona2'),
+        textZona2: document.getElementById('textZona2'),
+        regionLabels: {
+            ranuPani: document.getElementById('labelRanuPani'),
+            lumajang: document.getElementById('labelLumajang'),
+            malang: document.getElementById('labelMalang'),
+            pronojiwo: document.getElementById('labelPronojiwo')
+        }
+    }
+};
+
+// === AUDIO SYSTEM PVMBG ===
+let audioContext = null;
+let beepOscillator = null;
+let alarmOscillator = null;
+
+
+function initAudio() {
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+}
+
+function playBeep(frequency = 800, duration = 0.1) {
+    initAudio();
+    if (beepOscillator) beepOscillator.stop();
+    
+    beepOscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    beepOscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    beepOscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+    beepOscillator.type = 'sine';
+    
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+    
+    beepOscillator.start(audioContext.currentTime);
+    beepOscillator.stop(audioContext.currentTime + duration);
+}
+
+function playAlarm() {
+    initAudio();
+    if (alarmOscillator) alarmOscillator.stop();
+    
+    alarmOscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    alarmOscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    alarmOscillator.frequency.setValueAtTime(600, audioContext.currentTime);
+    alarmOscillator.frequency.exponentialRampToValueAtTime(900, audioContext.currentTime + 0.3);
+    alarmOscillator.type = 'sawtooth';
+    
+    gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.6);
+    
+    alarmOscillator.start(audioContext.currentTime);
+    alarmOscillator.stop(audioContext.currentTime + 0.6);
+}
+
+// BIP BIP TERUS SAAT SIAGA
+function startSiagaAlarm() {
+    if (appState.siagaAlarmInterval) return;
+    
+    appState.siagaAlarmInterval = setInterval(() => {
+        playAlarm();
+        const overlay = document.getElementById('alertOverlay');
+        overlay.style.display = 'block';
+        overlay.style.animation = 'blink 0.6s infinite';
+    }, 1000); // BIP setiap 1 detik
+}
+
+function stopSiagaAlarm() {
+    if (appState.siagaAlarmInterval) {
+        clearInterval(appState.siagaAlarmInterval);
+        appState.siagaAlarmInterval = null;
+    }
+    document.getElementById('alertOverlay').style.display = 'none';
+}
+
+// === PAGE NAVIGATION ===
+function showPage(pageId) {
+    document.querySelectorAll('.content > div').forEach(div => {
+        div.style.display = 'none';
+    });
+    
+    document.getElementById(pageId).style.display = 'block';
+    
+    document.querySelectorAll('.menu button').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.getElementById('btn-' + pageId.replace('Page', '')).classList.add('active');
+    
+    if (pageId === 'dash') updateDashboard();
+    if (pageId === 'mapPage') updateMap();
+    if (pageId === 'dataPage') updateLiveData();
+    if (pageId === 'analysis') updateAnalysis();
+}
+
+// ✅ UPDATE RSAM & SYNCHRONIZE ALL GRAPHS - OTOMATIS BERDASARKAN LEVEL
+function updateAllGraphs() {
+    // Update state dari input
+    appState.eruptionCount = parseInt(elements.eruptionInput.value) || 0;
+    appState.rockfallCount = parseInt(elements.rockfallInput.value) || 0;
+    
+    // ✅ RSAM calculation berdasarkan PVMBG formula
+    appState.rsamValue = Math.round(appState.eruptionCount * 35 + appState.rockfallCount * 12);
+    
+    // Auto-update RSAM select berdasarkan nilai aktual
+    if (appState.rsamValue > 500) {
+        elements.rsamSelect.value = 'high';
+    } else if (appState.rsamValue > 200) {
+        elements.rsamSelect.value = 'medium';
+    } else {
+        elements.rsamSelect.value = 'low';
+    }
+    
+    // Update RSAM visual
+    elements.rsamBox.className = `box rsam inlineBox rsam-${elements.rsamSelect.value}`;
+    
+    updateStatus();
+    updateDashboard();
+}
+
+// === STATUS SYSTEM - BERDASARKAN PVMBG OFFICIAL LEVELS ===
+function updateStatus() {
+    const totalEvents = appState.eruptionCount + appState.rockfallCount;
+    const currentThermal = appState.thermalData.slice(-1)[0] || 300;
+    
+    let newLevel = 1;
+    
+    if (totalEvents <= 35 && appState.rsamValue <= 200 && currentThermal <= 350) {
+        newLevel = 1; // NORMAL
+    } else if (totalEvents <= 60 && appState.rsamValue <= 500 && currentThermal <= 550) {
+        newLevel = 2; // WASPADA
+    } else {
+        newLevel = 3; // SIAGA
+    }
+    
+    appState.level = newLevel;
+    const levelData = PVMBG_LEVELS[newLevel];
+    
+    // Update UI
+    elements.statusLamp.style.color = levelData.color;
+    elements.statusLevel.textContent = levelData.name;
+    elements.statusRange.textContent = levelData.range;
+    elements.autoStatus.className = `status-display status-${levelData.name.toLowerCase()}`;
+    
+    // 🔥 BIP BIP SYSTEM
+    if (newLevel === 3 && appState.lastStatusLevel !== 3) {
+        startSiagaAlarm(); // MULAI BIP TERUS
+    } else if (newLevel < 3 && appState.lastStatusLevel === 3) {
+        stopSiagaAlarm(); // STOP BIP
+    } else if (newLevel === 2 && appState.lastStatusLevel < 2) {
+        playBeep(1000, 0.3); // BEEP SEKALI
+    }
+    
+    appState.lastStatusLevel = newLevel;
+}
+
+// ✅ DATA GENERATION BERDASARKAN LEVEL PVMBG
+function generateSeismicData() {
+    const time = (Date.now() - appState.baseTime) * 0.001;
+    const data = [];
+    const levelData = PVMBG_LEVELS[appState.level]
+        const intensity = appState.level * 8 + (appState.eruptionCount * 0.5 + appState.rockfallCount * 0.2);
+    
+    for (let i = 0; i < 100; i++) {
+        const t = (time + i * 0.1) % (Math.PI * 4);
+        const base = 5 + appState.level * 3;
+        const levelTremor = Math.sin(t * (2 + appState.level)) * (10 + intensity * 0.15);
+        data.push(Math.max(0, base + levelTremor + (Math.random() - 0.5) * 3));
+    }
+    return data;
+}
+
+function generateInfrasoundData() {
+    const time = (Date.now() - appState.baseTime) * 0.001;
+    const data = [];
+    const pressure = appState.level * 10 + appState.eruptionCount * 0.8;
+    
+    for (let i = 0; i < 100; i++) {
+        const t = (time + i * 0.1) % (Math.PI * 6);
+        const pulse = Math.sin(t * (2 + appState.level)) * (12 + pressure * 0.2);
+        data.push(Math.max(0, pulse + (Math.random() - 0.5) * 4));
+    }
+    return data;
+}
+
+function generateThermalData() {
+    const levelData = PVMBG_LEVELS[appState.level];
+    const baseTemp = parseInt(levelData.thermal.split(' ')[0].replace('°C','')) || 300;
+    const time = (Date.now() - appState.baseTime) * 0.001;
+    const data = [];
+    
+    for (let i = 0; i < 100; i++) {
+        const spike = Math.sin(time * 0.6 + i * 0.04) * (40 + appState.level * 20);
+        const temp = Math.max(200, baseTemp + spike + (Math.random() - 0.5) * 20);
+        data.push(Math.min(temp, 650));
+    }
+    return data;
+}
+
+// === CHART RENDERING ===
+function renderChart(canvasId, data, maxValue, color1, color2) {
+    const canvas = document.getElementById(canvasId);
+    const ctx = canvas.getContext('2d');
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * window.devicePixelRatio;
+    canvas.height = rect.height * window.devicePixelRatio;
+    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    
+    const width = canvas.width / window.devicePixelRatio;
+    const height = canvas.height / window.devicePixelRatio;
+    
+    // Clear
+    ctx.fillStyle = 'rgba(0,0,0,0.9)';
+    ctx.fillRect(0, 0, width, height);
+    
+    // Grid
+    ctx.strokeStyle = '#00eaff22';
+    ctx.lineWidth = 1;
+    for (let y = 0; y <= 5; y++) {
+        ctx.beginPath();
+        ctx.moveTo(0, (height / 5) * y);
+        ctx.lineTo(width, (height / 5) * y);
+        ctx.stroke();
+    }
+    
+    // Draw waveform
+    ctx.strokeStyle = color1;
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.shadowColor = color2;
+    ctx.shadowBlur = 8;
+    
+    ctx.beginPath();
+    const points = data.map((value, i) => {
+        const x = (i / (data.length - 1)) * width;
+        const y = height - (Math.min(value / maxValue, 1) * height);
+        return {x, y};
+    });
+    
+    ctx.moveTo(points[0].x, points[0].y);
+    for (let i = 1; i < points.length; i++) {
+        ctx.lineTo(points[i].x, points[i].y);
+    }
+    ctx.stroke();
+    
+    ctx.shadowBlur = 0;
+    
+    // Peak indicator
+    const peak = Math.max(...data);
+    if (peak > maxValue * 0.8) {
+        const peakX = width * 0.85;
+        const peakY = height - (peak / maxValue * height);
+        ctx.fillStyle = color2;
+        ctx.beginPath();
+        ctx.arc(peakX, peakY, 4, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+function updateTimeLabels() {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('id-ID', { 
+        hour12: false, 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit' 
+    });
+    
+    Object.values(elements.timeElements).forEach(el => {
+        if (el) el.innerHTML = `🕐 ${timeStr}`;
+    });
+}
+
+// ✅ DASHBOARD UPDATE
+function updateDashboard() {
+    appState.seismicData = generateSeismicData();
+    appState.infrasoundData = generateInfrasoundData();
+    appState.thermalData = generateThermalData();
+    
+    renderChart('wave1', appState.seismicData, 50, '#ff6b35', '#ff8c5a');
+    renderChart('wave2', appState.infrasoundData, 50, '#e63946', '#ff6b6b');
+    renderChart('thermal', appState.thermalData, 600, '#ffae00', '#ffd700');
+    
+    updateTimeLabels();
+}
+
+// ✅ ANALYSIS PAGE - OTOMATIS BERDASARKAN LEVEL
+function updateAnalysis() {
+    const levelData = PVMBG_LEVELS[appState.level];
+    
+    elements.analysisElements.analysisSeismic.textContent = levelData.seismic;
+    elements.analysisElements.analysisInfrasound.textContent = levelData.infrasound;
+    elements.analysisElements.analysisThermal.textContent = levelData.thermal;
+    elements.analysisElements.analysisRSAM.textContent = levelData.rsam;
+    elements.analysisElements.analysisStatus.textContent = `LEVEL ${appState.level} (${levelData.name})`;
+    elements.analysisElements.analysisRisk.textContent = levelData.risk;
+    elements.analysisElements.analysisRec.textContent = levelData.rec;
+    
+    elements.timeElements.analysisUpdate.textContent = new Date().toLocaleTimeString('id-ID');
+}
+
+// ✅ LIVE DATA - OTOMATIS BERDASARKAN LEVEL
+function updateLiveData() {
+    const levelData = PVMBG_LEVELS[appState.level];
+    
+    elements.timeElements.liveUpdate.textContent = new Date().toLocaleTimeString('id-ID');
+    elements.liveElements.liveSeismic.textContent = appState.level === 1 ? 'NORMAL' : 'HIGH';
+    elements.liveElements.liveThermal.textContent = Math.round(appState.thermalData.slice(-1)[0]) + '°C';
+    elements.liveElements.liveRSAM.textContent = Math.round(appState.rsamValue);
+    elements.liveElements.liveStatusLevel.textContent = levelData.name;
+}
+
+// ✅ MAP UPDATE - DENGAN NAMA WILAYAH & ZONA OTOMATIS
+function updateMap() {
+    const levelData = PVMBG_LEVELS[appState.level];
+    
+    // Update status
+    elements.mapElements.mapStatus.textContent = `LEVEL ${appState.level} - ${levelData.name}`;
+    elements.mapElements.mapStatus.style.color = levelData.color;
+    elements.mapElements.mapRSAM.textContent = levelData.rsam;
+    elements.timeElements.mapTime.textContent = new Date().toLocaleTimeString('id-ID');
+    
+    // Show/hide zones berdasarkan level
+    if (appState.level >= 2) {
+        elements.mapElements.zona1.style.display = 'block';
+        elements.mapElements.textZona1.style.display = 'block';
+    } else {
+        elements.mapElements.zona1.style.display = 'none';
+        elements.mapElements.textZona1.style.display = 'none';
+    }
+    
+    if (appState.level === 3) {
+        elements.mapElements.zona2.style.display = 'block';
+        elements.mapElements.textZona2.style.display = 'block';
+        // Show region labels saat SIAGA
+        Object.values(elements.mapElements.regionLabels).forEach(label => {
+            label.style.display = 'block';
+        });
+    } else {
+        elements.mapElements.zona2.style.display = 'none';
+        elements.mapElements.textZona2.style.display = 'none';
+        // Hide region labels
+        Object.values(elements.mapElements.regionLabels).forEach(label => {
+            label.style.display = 'none';
+        });
+    }
+    
+    // Kawah pulse effect
+    const kawah = document.getElementById('kawah');
+    kawah.style.animation = 'none';
+    setTimeout(() => {
+        kawah.style.animation = `pulseWarning ${1 + appState.level * 0.2}s infinite`;
+    }, 10);
+}
+
+// === EVENT LISTENERS ===
+elements.eruptionInput.addEventListener('input', updateAllGraphs);
+elements.rockfallInput.addEventListener('input', updateAllGraphs);
+elements.rsamSelect.addEventListener('change', updateAllGraphs);
+
+// Tooltip system
+document.addEventListener('mousemove', (e) => {
+    const tooltip = elements.tooltip;
+    tooltip.style.display = 'none';
+});
+
+document.querySelectorAll('canvas').forEach(canvas => {
+    canvas.addEventListener('mousemove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const data = canvas.id === 'wave1' ? appState.seismicData :
+                    canvas.id === 'wave2' ? appState.infrasoundData :
+                    appState.thermalData;
+        
+        const index = Math.floor((x / rect.width) * data.length);
+        const value = data[index];
+        const levelData = PVMBG_LEVELS[appState.level];
+        
+        elements.tooltip.innerHTML = `
+            ${canvas.id.toUpperCase()}<br>
+            Value: ${Math.round(value * 10) / 10}<br>
+            Status: ${levelData.name}<br>
+            Time: ${Math.round(index / data.length * 60)}min ago
+        `;
+        elements.tooltip.style.left = (e.pageX + 10) + 'px';
+        elements.tooltip.style.top = (e.pageY - 10) + 'px';
+        elements.tooltip.style.display = 'block';
+    });
+    
+    canvas.addEventListener('mouseleave', () => {
+        elements.tooltip.style.display = 'none';
+    });
+});
+
+// ✅ MAIN LOOP
+let lastFrameTime = 0;
+function gameLoop(currentTime) {
+    const deltaTime = (currentTime - lastFrameTime) / 1000;
+    lastFrameTime = currentTime;
+    appState.t += deltaTime;
+    
+    if (document.getElementById('dash').style.display !== 'none') {
+        updateDashboard();
+    }
+    
+    requestAnimationFrame(gameLoop);
+}
+
+// === INIT ===
+document.addEventListener('DOMContentLoaded', () => {
+    appState.baseTime = Date.now();
+    updateAllGraphs();
+    showPage('dash');
+    requestAnimationFrame(gameLoop);
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+        if (e.key === '1') showPage('dash');
+        if (e.key === '2') showPage('analysis');
+        if (e.key === '3') showPage('mapPage');
+        if (e.key === '4') showPage('dataPage');
+        if (e.key === '5') showPage('contactPage');
+    });
+});
+
+// Prevent context menu
+document.querySelectorAll('canvas').forEach(canvas => {
+    canvas.addEventListener('contextmenu', e => e.preventDefault());
+});
+</script>
+</body>
+</html>
+
+

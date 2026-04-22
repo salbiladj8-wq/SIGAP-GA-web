@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Data Sensor</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+<div class="header">Data Sensor</div>
+
+<div class="panel" style="margin:20px;">
+<table>
+<tr><th>Waktu</th><th>Seismik</th><th>Status</th></tr>
+<tr><td>10:00</td><td>10</td><td>Aman</td></tr>
+<tr><td>10:05</td><td>40</td><td>Waspada</td></tr>
+<tr><td>10:10</td><td>80</td><td>Siaga</td></tr>
+</table>
+</div>
+
+<div class="panel" style="margin:20px;">
+<canvas id="chart"></canvas>
+</div>
+
+<script>
+new Chart(document.getElementById('chart'),{
+type:'line',
+data:{labels:["10:00","10:05","10:10"],
+datasets:[{data:[10,40,80],borderColor:'#00ffff'}]},
+options:{plugins:{legend:{display:false}}}
+});
+</script>
+
+</body>
+</html>

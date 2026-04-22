@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Mobile</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+<div class="phone">
+
+<h3 style="text-align:center;color:#00ffff;">SIGAP MOBILE</h3>
+
+<div id="status" class="status-box aman">AMAN</div>
+
+<canvas id="mini"></canvas>
+
+</div>
+
+<script>
+let d=[10,20,30,40,50];
+
+const mini=new Chart(document.getElementById('mini'),{
+type:'line',
+data:{labels:[1,2,3,4,5],datasets:[{data:d,borderColor:'#00ffff'}]},
+options:{plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:false}}}
+});
+
+setInterval(()=>{
+let v=Math.floor(Math.random()*100);
+d.push(v);d.shift();
+mini.data.datasets[0].data=d;
+mini.update();
+
+let s="AMAN",c="aman";
+if(v>70){s="SIAGA";c="siaga";}
+else if(v>30){s="WASPADA";c="waspada";}
+
+status.className="status-box "+c;
+status.innerText=s;
+
+},3000);
+</script>
+
+</body>
+</html>
